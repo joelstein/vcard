@@ -9,7 +9,7 @@ namespace JeroenDesloovere\VCard;
  * file that was distributed with this source code.
  */
 
-use Behat\Transliterator\Transliterator;
+use Cocur\Slugify\Slugify;
 
 /**
  * VCard PHP Class to generate .vcard files and save them to a file or output as a download.
@@ -63,6 +63,13 @@ class VCard
      * @var string
      */
     public $charset = 'utf-8';
+
+    /**
+     * Slugify instance
+     *
+     * @var Slugify
+     */
+    private $slugify;
 
     /**
      * Add address
@@ -596,6 +603,20 @@ class VCard
     }
 
     /**
+     * Get slugify instance
+     *
+     * @return Slugify
+     */
+    private function getSlugify()
+    {
+        if ($this->slugify === null) {
+            $this->slugify = new Slugify();
+        }
+        
+        return $this->slugify;
+    }
+
+    /**
      * Decode
      *
      * @param  string $value The value to decode
@@ -604,7 +625,7 @@ class VCard
     private function decode($value)
     {
         // convert cyrlic, greek or other caracters to ASCII characters
-        return Transliterator::transliterate($value);
+        return $this->getSlugify()->slugify($value, '-');
     }
 
     /**
@@ -926,10 +947,7 @@ class VCard
         }
 
         // decode value + lowercase the string
-        $value = strtolower($this->decode($value));
-
-        // urlize this part
-        $value = Transliterator::urlize($value);
+        $value = $this->decode($value);
 
         // overwrite filename or add to filename using a prefix in between
         $this->filename = ($overwrite) ?
